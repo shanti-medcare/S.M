@@ -1,5 +1,4 @@
-
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 
 interface HeaderProps {
   onHome: () => void;
@@ -8,6 +7,19 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ onHome, onAdminAccess }) => {
   const timerRef = useRef<number | null>(null);
+  const [isDark, setIsDark] = useState(() => document.documentElement.classList.contains('dark'));
+
+  const toggleDarkMode = () => {
+    const newDarkState = !isDark;
+    setIsDark(newDarkState);
+    if (newDarkState) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  };
 
   const handleTouchStart = () => {
     timerRef.current = window.setTimeout(() => {
@@ -20,7 +32,7 @@ const Header: React.FC<HeaderProps> = ({ onHome, onAdminAccess }) => {
   };
 
   return (
-    <header className="sticky top-0 bg-white/95 backdrop-blur-lg border-b border-gray-100 py-3 px-4 z-50 flex items-center justify-between shadow-sm transition-all duration-500">
+    <header className="sticky top-0 bg-[var(--bg-card)] backdrop-blur-lg border-b border-[var(--border-subtle)] py-3 px-4 z-50 flex items-center justify-between shadow-sm transition-all duration-500">
       <div 
         onClick={onHome}
         onTouchStart={handleTouchStart}
@@ -47,19 +59,27 @@ const Header: React.FC<HeaderProps> = ({ onHome, onAdminAccess }) => {
         </div>
 
         <div className="flex flex-col justify-center">
-          <h1 className="text-2xl font-black text-red-600 leading-none tracking-tighter">
+          <h1 className="text-2xl font-black text-[var(--brand-red)] leading-none tracking-tighter">
             শান্তি
           </h1>
-          <span className="text-[10px] font-bold text-slate-500 leading-none tracking-widest mt-1 uppercase">
+          <span className="text-[10px] font-bold text-[var(--text-secondary)] leading-none tracking-widest mt-1 uppercase">
             মে ডি কে য়া র
           </span>
         </div>
       </div>
       
-      <div className="flex items-center gap-2">
-        <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-100 px-3 py-1.5 rounded-full shadow-sm">
+      <div className="flex items-center gap-3">
+        <button 
+          onClick={toggleDarkMode}
+          className="w-10 h-10 flex items-center justify-center rounded-xl bg-[var(--bg-card-shadow-1)] text-[var(--text-primary)] border border-[var(--border-subtle)] shadow-sm active:scale-90 transition-all"
+          aria-label="Toggle Dark Mode"
+        >
+          {isDark ? <i className="fa-solid fa-sun text-amber-400"></i> : <i className="fa-solid fa-moon text-blue-600"></i>}
+        </button>
+
+        <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-800 px-3 py-1.5 rounded-full shadow-sm">
           <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
-          <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Open</span>
+          <span className="text-[10px] font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-widest">Open</span>
         </div>
       </div>
 

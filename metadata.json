@@ -1,6 +1,10 @@
 {
   "name": "শান্তি মেডিকেয়ার",
-  "description": "সরদারপাড়া বাজার, রাধানগর ইউনিয়ন, আটোয়ারী, পঞ্চগড়-এর একমাত্র বিশ্বস্ত ডিজিটাল ফার্মেসি।",
+  "short_name": "শান্তি",
+  "description": "সরদারপাড়া বাজারের একমাত্র বিশ্বস্ত ডিজিটাল ফার্মেসি।",
+  "theme_color": "#dc2626",
+  "background_color": "#fffdf7",
+  "display": "standalone",
   "requestFramePermissions": [
     "camera"
   ]

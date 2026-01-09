@@ -1,82 +1,92 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+function getAI() {
+  return new GoogleGenAI({ apiKey: process.env.API_KEY });
+}
 
-export async function interpretNoteAI(note: string) {
+function extractJSON(text: string) {
   try {
-    const response = await ai.models.generateContent({
-      model: "gemini-3-flash-preview",
-      contents: `User medicine list note: "${note}".
-      Identify the medicines mentioned and the QUANTITY specified for each (e.g., "5 pieces", "১০টা", "5 pish"). 
-      If no quantity is mentioned, default to 1.
-      For each medicine, identify its per-unit price (for 1 single tablet/piece). 
-      Return a list of items with name, per-piece price, category, and the quantity found in the text.`,
-      config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            items: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  name: { type: Type.STRING },
-                  price: { type: Type.NUMBER, description: "Price for 1 single tablet/piece" },
-                  category: { type: Type.STRING },
-                  quantity: { type: Type.NUMBER, description: "Quantity requested by the user. Default to 1 if not specified." }
-                },
-                required: ["name", "price", "category", "quantity"]
-              }
-            }
-          },
-          required: ["items"]
-        }
-      }
-    });
-
-    return JSON.parse(response.text);
-  } catch (error) {
-    console.error("AI Note Interpretation Error:", error);
+    const jsonMatch = text.match(/\{[\s\S]*\}|\[[\s\S]*\]/);
+    if (jsonMatch) {
+      return JSON.parse(jsonMatch[0]);
+    }
+    return JSON.parse(text);
+  } catch (e) {
+    console.error("AI JSON Parse Error:", e, "Raw text:", text);
     return null;
   }
 }
 
-export async function searchMedicinesAI(query: string) {
+export async function interpretNoteAI(note: string) {
   try {
+    const ai = getAI();
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: `You are a helpful pharmacist in Bangladesh. Query: "${query}". 
-      Respond in Bengali. Provide 3-5 medicines with per-unit price estimates.
-      Include a disclaimer.`,
+      contents: {
+        parts: [{
+          text: `আপনি শান্তি মেডিকেয়ার (সরদারপাড়া বাজার, আটোয়ারী) এর একজন ফার্মাসিস্ট। নিচের ওষুধের লিস্টটি বিশ্লেষণ করুন: "${note}"। 
+          Google Search ব্যবহার করে প্রতিটি ওষুধের বর্তমান সঠিক বাজারমূল্য (BDT), সঠিক বানান এবং পাওয়ার (যেমন: 20mg, 500mg) নিশ্চিত করুন। 
+          
+          নির্দেশনা:
+          ১. প্রতিটি ওষুধের নাম ও স্ট্রেন্থ বের করুন।
+          ২. বাংলাদেশে বর্তমান আনুমানিক MRP মূল্য বের করুন।
+          ৩. নিচের JSON ফরম্যাটে উত্তর দিন:
+          {"items": [{"name": "ওষুধের নাম ও পাওয়ার", "price": 10.0, "category": "ট্যাবলেট/সিরাপ", "quantity": 1, "unit": "piece/strip"}]}`
+        }]
+      },
       config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            medicines: {
-              type: Type.ARRAY,
-              items: {
-                type: Type.OBJECT,
-                properties: {
-                  name: { type: Type.STRING },
-                  description: { type: Type.STRING },
-                  category: { type: Type.STRING }
-                },
-                required: ["name", "description", "category"]
-              }
-            },
-            disclaimer: { type: Type.STRING }
-          },
-          required: ["medicines", "disclaimer"]
-        }
+        tools: [{googleSearch: {}}],
       }
     });
 
-    return JSON.parse(response.text);
+    const text = response.text || "";
+    const items = extractJSON(text.trim())?.items || [];
+    const sources = response.candidates?.[0]?.groundingMetadata?.groundingChunks?.map((chunk: any) => ({
+      title: chunk.web?.title || "তথ্যাদি",
+      uri: chunk.web?.uri
+    })) || [];
+
+    return { items, sources };
   } catch (error) {
-    console.error("AI Search Error:", error);
-    return null;
+    console.error("AI Error:", error);
+    return { items: [], sources: [] };
+  }
+}
+
+export async function analyzePrescriptionAI(base64Image: string) {
+  try {
+    const ai = getAI();
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: {
+        parts: [
+          {
+            inlineData: {
+              mimeType: "image/jpeg",
+              data: base64Image.split(',')[1],
+            },
+          },
+          {
+            text: `এই প্রেসক্রিপশনটি বিশ্লেষণ করুন। Google Search ব্যবহার করে ওষুধের নাম এবং বাংলাদেশে বর্তমান সঠিক বাজারমূল্য যাচাই করুন। 
+            ফলাফলটি JSON ফরম্যাটে দিন যাতে "items" কী-তে ওষুধের নাম, দাম (প্রতি পিস), এবং ক্যাটাগরি থাকে।`
+          }
+        ]
+      },
+      config: {
+        tools: [{googleSearch: {}}],
+      }
+    });
+
+    const text = response.text || "";
+    const items = extractJSON(text.trim())?.items || [];
+    const sources = response.candidates?.[0]?.groundingMetadata?.groundingChunks?.map((chunk: any) => ({
+      title: chunk.web?.title || "তথ্যাদি",
+      uri: chunk.web?.uri
+    })) || [];
+    
+    return { items, sources };
+  } catch (error) {
+    console.error("Prescription AI Error:", error);
+    return { items: [], sources: [] };
   }
 }

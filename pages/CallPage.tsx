@@ -1,6 +1,5 @@
-
 import React from 'react';
-import Button from '../components/Button';
+import Button from '../components/Button.tsx';
 
 interface CallPageProps {
   onBack: () => void;
@@ -14,23 +13,23 @@ const CallPage: React.FC<CallPageProps> = ({ onBack }) => {
   return (
     <div className="px-6 space-y-8 py-8 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-32">
       <div className="flex items-center gap-5">
-        <button onClick={onBack} className="w-14 h-14 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-slate-800 shadow-sm active:scale-90 transition-all">
+        <button onClick={onBack} className="w-14 h-14 bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 rounded-2xl flex items-center justify-center text-slate-800 dark:text-slate-100 shadow-sm active:scale-90 transition-all">
           <i className="fa-solid fa-arrow-left text-xl"></i>
         </button>
         <div>
-          <h2 className="text-3xl font-black text-slate-800 tracking-tight">যোগাযোগ করুন</h2>
+          <h2 className="text-3xl font-black text-slate-800 dark:text-slate-100 tracking-tight">যোগাযোগ করুন</h2>
           <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">সরাসরি কথা বলে অর্ডার দিন</p>
         </div>
       </div>
 
       <div className="clay-card rounded-[3.5rem] p-12 flex flex-col items-center text-center space-y-8">
-        <div className="w-32 h-32 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center shadow-inner relative">
+        <div className="w-32 h-32 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 rounded-full flex items-center justify-center shadow-inner relative">
           <i className="fa-solid fa-phone-volume text-6xl animate-pulse"></i>
-          <div className="absolute inset-0 rounded-full border-4 border-emerald-100 animate-ping"></div>
+          <div className="absolute inset-0 rounded-full border-4 border-emerald-100 dark:border-emerald-900 animate-ping"></div>
         </div>
 
         <div className="space-y-2">
-          <h3 className="text-3xl font-black text-slate-900 leading-tight">সহজেই অর্ডার দিন</h3>
+          <h3 className="text-3xl font-black text-slate-900 dark:text-slate-100 leading-tight">সহজেই অর্ডার দিন</h3>
           <p className="text-lg text-slate-500 font-bold px-4 leading-relaxed">
             আমরা আছি আপনার অপেক্ষায়। ফোন বা মেসেজে অর্ডার করতে নিচের বাটন ব্যবহার করুন।
           </p>

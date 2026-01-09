@@ -1,7 +1,6 @@
-
 import React from 'react';
-import ReactDOM from 'react-dom/client';
-import AdminPage from './pages/AdminPage';
+import { createRoot } from 'react-dom/client';
+import AdminPage from './pages/AdminPage.tsx';
 
 const AdminApp: React.FC = () => {
   return (
@@ -15,5 +14,8 @@ const AdminApp: React.FC = () => {
   );
 };
 
-const root = ReactDOM.createRoot(document.getElementById('root')!);
-root.render(<AdminApp />);
+const rootElement = document.getElementById('root');
+if (rootElement) {
+  const root = createRoot(rootElement);
+  root.render(<AdminApp />);
+}
